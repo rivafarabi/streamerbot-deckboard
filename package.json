@@ -1,0 +1,16 @@
+{
+    "name": "streamerbot-deckboard",
+    "version": "0.0.1",
+    "description": "A plugin to execute Streamer.bot actions from Deckboard",
+    "main": "index.js",
+    "scripts": {
+        "build": "deckboard-kit --build",
+        "install": "deckboard-kit --install"
+    },
+    "author": "Riva Farabi",
+    "license": "MIT",
+    "dependencies": {
+        "json-js": "^1.1.2",
+        "node-fetch": "^2.6.1"
+    }
+}

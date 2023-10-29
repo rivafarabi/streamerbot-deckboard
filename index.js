@@ -88,16 +88,16 @@ class StreamerBot {
 		const url = `http://${address.value}:${port.value}/DoAction`;
 
 		if(!!args && typeof args === 'string')
-			args = json.parse(args);
+			args = JSON.parse(args);
 		else args = {};
 
-		const body = json.stringify({
+		const body = JSON.stringify({
 			action: { id },
 			args
 		})
 
 		return fetch(url, { method: 'POST', body })
-			.then(res => res.json())
+			.then(res => console.log('fetchStatusCode:', res.status))
 			.then(data =>
 				console.log('doStreamerBotAction', data)
 			)

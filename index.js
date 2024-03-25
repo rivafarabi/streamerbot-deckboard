@@ -1,5 +1,5 @@
 const fetch = require('node-fetch');
-const json = require('json-js');
+const { log } = require('deckboard-kit');
 
 class StreamerBot {
 	constructor() {
@@ -34,6 +34,7 @@ class StreamerBot {
 					{
 						label: 'Arguments',
 						ref: 'args',
+						hint: 'In JSON format. ex: {"fiz": "buzz"}',
 						type: 'input:text'
 					}
 				]
@@ -44,77 +45,76 @@ class StreamerBot {
 	}
 
 	get selections() {
-		return [{
-			header: this.name
-		}, ...this.inputs];
+		return [
+			{
+				header: this.name
+			},
+			...this.inputs
+		];
 	}
 
 	// Executes when the extensions loaded every time the app start.
-	initExtension() {
-	}
+	initExtension() {}
 
 	getAutocompleteOptions(ref) {
-		switch(ref) {
+		switch (ref) {
 			case 'actionId':
 				return this.fetchStreamerBotActions();
 			default:
-				return []
+				return [];
 		}
-
 	}
 
-	fetchStreamerBotActions() {
-		const { address, port } = this.configs;
-		const url = `http://${address.value}:${port.value}/GetActions`
+	async fetchStreamerBotActions() {
+		try {
+			const { address, port } = this.configs;
+			const url = `http://${address.value}:${port.value}/GetActions`;
 
-		return fetch(url, { method: 'GET' })
-			.then(res => res.json())
-			.then(data => {
-				console.log({ data })
-				return data.actions.map(({ id, name }) => ({
-					value: id,
-					label: name
-				}))
-			}
-			)
-			.catch(err => {
-				console.log('fetchStreamerBotActions', err)
-				return []
-			})
+			const response = await fetch(url, { method: 'GET' });
+			const data = await response.json();
+
+			return data.actions.map(({ id, name }) => ({
+				value: id,
+				label: name,
+			}));
+		} catch (err) {
+			log.error('fetchStreamerBotActions', err);
+			throw err;
+		}
 	}
 
-	doStreamerBotAction(id, args) {
-		const { address, port } = this.configs;
-		const url = `http://${address.value}:${port.value}/DoAction`;
+	async doStreamerBotAction(id, args) {
+		try {
+			const { address, port } = this.configs;
+			const url = `http://${address.value}:${port.value}/DoAction`;
 
-		if(!!args && typeof args === 'string')
-			args = json.parse(args);
-		else args = {};
+			if (!!args && typeof args === 'string') args = JSON.parse(args);
+			else args = {};
 
-		const body = json.stringify({
-			action: { id },
-			args
-		})
+			const body = JSON.stringify({
+				action: { id },
+				args,
+			});
 
-		return fetch(url, { method: 'POST', body })
-			.then(res => res.json())
-			.then(data =>
-				console.log('doStreamerBotAction', data)
-			)
-			.catch(err => {
-				console.log('doStreamerBotAction', err)
-			})
+			const response = await fetch(url, { method: 'POST', body });
+			const data = await response.json();
+			log.info('doStreamerBotAction', data);
+		} catch (err) {
+			log.error('doStreamerBotAction', err);
+			throw err;
+		}
 	}
+
 	execute(action, data) {
-		switch(action) {
+		switch (action) {
 			case 'streamerbot-action':
 				const { actionId, args } = data;
-				this.doStreamerBotAction(actionId, args)
+				this.doStreamerBotAction(actionId, args);
 				break;
 			default:
 				break;
 		}
-	};
+	}
 }
 
-module.exports = sendData => new StreamerBot(sendData);
+module.exports = (sendData) => new StreamerBot(sendData);
